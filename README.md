@@ -15,7 +15,7 @@ Code derived from [this article](https://hackaday.io/project/5301-reverse-engine
 With pip:
 ```bash
 pip install git+https://github.com/heinemml/CO2Meter
-```bash
+```
 
 Without pip:
 ```bash
