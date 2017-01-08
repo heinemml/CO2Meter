@@ -3,19 +3,19 @@ import sys, fcntl, time
 class co2meter:
 
     key = [0xc4, 0xc6, 0xc0, 0x92, 0x40, 0x23, 0xdc, 0x96]
-    fp = 0
+    device = ""
 
     def __init__(self, device="/dev/hidraw0"):
-        self.fp = open(device, "a+b",  0)
+        self.device = device
+        fp = open(device, "a+b",  0)
 
         HIDIOCSFEATURE_9 = 0xC0094806
         if sys.version_info >= (3,):
             set_report = [0] + self.key
-            fcntl.ioctl(self.fp, HIDIOCSFEATURE_9, bytearray(set_report))
+            fcntl.ioctl(fp, HIDIOCSFEATURE_9, bytearray(set_report))
         else:
             set_report = "\x00" + "".join(chr(e) for e in self.key)
-            fcntl.ioctl(self.fp, HIDIOCSFEATURE_9, set_report)
-
+            fcntl.ioctl(fp, HIDIOCSFEATURE_9, set_report)
 
     def decrypt(self, key,  data):
         cstate = [0x48,  0x74,  0x65,  0x6D,  0x70,  0x39,  0x39,  0x65]
@@ -49,9 +49,10 @@ class co2meter:
 
     def getData(self):
         values = {}
+        fp = open(self.device, "a+b",  0)
 
         while True:
-            result = self.fp.read(8)
+            result = fp.read(8)
             if sys.version_info >= (3,):
                 data = list(result)
             else:
