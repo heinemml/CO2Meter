@@ -1,6 +1,8 @@
 # CO2Meter
 Python Module to use co2meters like the 'AirCO2ntrol Mini' from TFA Dostmann with USB ID 04d9:a052. There are also other modules using the same interface.
 
+This module supports Python 2.7 and 3.x.
+
 ## Attribution
 Reverse Engineering of the protocol and initial code done by [Henryk Plötz](https://github.com/henryk). 
 
@@ -8,10 +10,28 @@ Read all about it at [hackaday](https://hackaday.io/project/5301-reverse-enginee
 
 Code derived from [this article](https://hackaday.io/project/5301-reverse-engineering-a-low-cost-usb-co-monitor/log/17909-all-your-base-are-belong-to-us)
 
+## Install
+```bash
+python setup.py install
+```
+Remark: you don't need to install, you can also just copy the CO2Meter.py into your project.
+
+If you don't want to run your script as root make sure you have sufficient rights to access the device file.
+
+This udev rule can be used to set permissions.
+```
+ACTION=="remove", GOTO="co2mini_end"
+
+SUBSYSTEMS=="usb", KERNEL=="hidraw*", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=="a052", GROUP="plugdev", MODE="0660", SYMLINK+="co2mini%n", GOTO="co2mini_end"
+
+LABEL="co2mini_end"
+```
+save it as `/etc/udev/rules.d/90-co2mini.rules`
+
 ## Usage
 ```python
 from CO2Meter import *
-sensor = CO2Meter()
+sensor = CO2Meter("/dev/hidraw0")
 sensor.get_data()
 ```
 
