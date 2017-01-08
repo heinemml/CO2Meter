@@ -15,4 +15,4 @@ sensor = CO2Meter()
 sensor.get_data()
 ```
 
-The device writes out one value at a time. So we need to parse some data until we have temperature and humidity. Thus the get_data() method can take between 2 and 5 seconds. Take this into account when using it in a single threaded environment.
+The device writes out one value at a time. So we need to parse some data until we have co2 and temperature. Thus the get_data() method can take between 2 and 5 seconds. Take this into account when using it in a single threaded environment.
