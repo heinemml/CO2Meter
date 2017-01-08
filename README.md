@@ -26,7 +26,9 @@ SUBSYSTEMS=="usb", KERNEL=="hidraw*", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=
 
 LABEL="co2mini_end"
 ```
-save it as `/etc/udev/rules.d/90-co2mini.rules`
+save it as `/etc/udev/rules.d/90-co2mini.rules` and add the script user to the group `plugdev`.
+
+This rules make the device also available as co2mini0 (increase trailing number for each additional device).
 
 ## Usage
 ```python

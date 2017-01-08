@@ -71,7 +71,7 @@ class CO2Meter:
                 values[op] = val
 
                 if 0x50 in values and 0x42 in values:
-                    return {"Co2": values[0x50], "Temp": (values[0x42]/16.0-273.15)}
+                    return {'co2': values[0x50], 'temperature': (values[0x42]/16.0-273.15)}
 
 
 if __name__ == "__main__":
