@@ -11,6 +11,13 @@ Read all about it at [hackaday](https://hackaday.io/project/5301-reverse-enginee
 Code derived from [this article](https://hackaday.io/project/5301-reverse-engineering-a-low-cost-usb-co-monitor/log/17909-all-your-base-are-belong-to-us)
 
 ## Install
+
+With pip:
+```bash
+pip install git+https://github.com/heinemml/CO2Meter
+```bash
+
+Without pip:
 ```bash
 python setup.py install
 ```
