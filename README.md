@@ -49,3 +49,7 @@ while True:
 
 The device writes out one value at a time. So we need to parse some data until we have co2 and temperature. Thus the get_data() method will initially return none or only on value (whichever comes first). 
 When you just need one measurement you should wait some seconds or iterate until you get a full reading. If you just need co2 a call to `get_co2` might speed things up.
+
+
+###Error handling
+In Case the device can't be read anymore (e.g. it was unplugged) the worker thread will end in the background. Afterwards calls to any of the `get_*` functions will throw an `IOError`. You will need to handle any resetup, making sure that the device is there etc yourself.
