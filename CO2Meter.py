@@ -6,8 +6,12 @@ import weakref
 def _co2_worker(weak_self):
     while True:
         self = weak_self()
-        if self is None: break
+        if self is None:
+            break
         self._read_data()
+
+        if not self._running:
+            break
         del self
 
 
@@ -17,6 +21,7 @@ class CO2Meter:
     _device = ""
     _values = {}
     _file = ""
+    _running = True
 
     def __init__(self, device="/dev/hidraw0"):
         self._device = device
@@ -36,6 +41,7 @@ class CO2Meter:
 
 
     def _read_data(self):
+        try:
             result = self._file.read(8)
             if sys.version_info >= (3,):
                 data = list(result)
@@ -49,6 +55,8 @@ class CO2Meter:
                 op = decrypted[0]
                 val = decrypted[1] << 8 | decrypted[2]
                 self._values[op] = val
+        except:
+            self._running = False
 
 
     def _decrypt(self, data):
@@ -83,6 +91,8 @@ class CO2Meter:
 
 
     def get_co2(self):
+        if not self._running:
+            raise IOError("worker thread couldn't read data")
         result = {}
         if 0x50 in self._values:
             result = {'co2': self._values[0x50]}
@@ -91,6 +101,8 @@ class CO2Meter:
 
 
     def get_temperature(self):
+        if not self._running:
+            raise IOError("worker thread couldn't read data")
         result = {}
         if 0x42 in self._values:
             result = {'temperature': (self._values[0x42]/16.0-273.15)}
@@ -99,6 +111,8 @@ class CO2Meter:
 
 
     def get_humidity(self): # not implemented by all devices
+        if not self._running:
+            raise IOError("worker thread couldn't read data")
         result = {}
         if 0x44 in self._values:
             result = {'humidity': (self._values[0x44]/100.0)}
