@@ -97,11 +97,13 @@ class CO2Meter:
 
         return result
 
+
     def get_humidity(self): # not implemented by all devices
         result = {}
         if 0x44 in self._values:
             result = {'humidity': (self._values[0x44]/100.0)}
         return result
+
 
     def get_data(self):
         result = {}

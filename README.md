@@ -40,8 +40,12 @@ This rules make the device also available as co2mini0 (increase trailing number 
 ## Usage
 ```python
 from CO2Meter import *
+import time
 sensor = CO2Meter("/dev/hidraw0")
-sensor.get_data()
+while True:
+    time.sleep(2)
+    sensor.get_data()
 ```
 
-The device writes out one value at a time. So we need to parse some data until we have co2 and temperature. Thus the get_data() method can take between 2 and 5 seconds. Take this into account when using it in a single threaded environment.
+The device writes out one value at a time. So we need to parse some data until we have co2 and temperature. Thus the get_data() method will initially return none or only on value (whichever comes first). 
+When you just need one measurement you should wait some seconds or iterate until you get a full reading. If you just need co2 a call to `get_co2` might speed things up.
