@@ -1,22 +1,54 @@
 import sys
 import fcntl
+import threading
+import weakref
+
+def _co2_worker(weak_self):
+    while True:
+        self = weak_self()
+        if self is None: break
+        self._read_data()
+        del self
+
 
 class CO2Meter:
 
     _key = [0xc4, 0xc6, 0xc0, 0x92, 0x40, 0x23, 0xdc, 0x96]
     _device = ""
+    _values = {}
+    _file = ""
 
     def __init__(self, device="/dev/hidraw0"):
         self._device = device
-        file = open(device, "a+b", 0)
+        self._file = open(device, "a+b", 0)
 
         HIDIOCSFEATURE_9 = 0xC0094806
         if sys.version_info >= (3,):
             set_report = [0] + self._key
-            fcntl.ioctl(file, HIDIOCSFEATURE_9, bytearray(set_report))
+            fcntl.ioctl(self._file, HIDIOCSFEATURE_9, bytearray(set_report))
         else:
             set_report_str = "\x00" + "".join(chr(e) for e in self._key)
-            fcntl.ioctl(file, HIDIOCSFEATURE_9, set_report_str)
+            fcntl.ioctl(self._file, HIDIOCSFEATURE_9, set_report_str)
+
+        thread = threading.Thread(target = _co2_worker, args=(weakref.ref(self),))
+        thread.daemon = True
+        thread.start()
+
+
+    def _read_data(self):
+            result = self._file.read(8)
+            if sys.version_info >= (3,):
+                data = list(result)
+            else:
+                data = list(ord(e) for e in result)
+
+            decrypted = self._decrypt(data)
+            if decrypted[4] != 0x0d or (sum(decrypted[:3]) & 0xff) != decrypted[3]:
+                print(self._hd(data), " => ", self._hd(decrypted), "Checksum error")
+            else:
+                op = decrypted[0]
+                val = decrypted[1] << 8 | decrypted[2]
+                self._values[op] = val
 
 
     def _decrypt(self, data):
@@ -50,31 +82,28 @@ class CO2Meter:
         return " ".join("%02X" % e for e in data)
 
 
+    def get_co2(self):
+        result = {}
+        if 0x50 in self._values:
+            result = {'co2': self._values[0x50]}
+
+        return result
+
+
+    def get_temperature(self):
+        result = {}
+        if 0x42 in self._values:
+            result = {'temperature': (self._values[0x42]/16.0-273.15)}
+
+        return result
+
+
     def get_data(self):
-        values = {}
-        file = open(self._device, "a+b", 0)
+        result = {}
+        result.update(self.get_co2())
+        result.update(self.get_temperature())
 
-        while True:
-            result = file.read(8)
-            if sys.version_info >= (3,):
-                data = list(result)
-            else:
-                data = list(ord(e) for e in result)
-
-            decrypted = self._decrypt(data)
-            if decrypted[4] != 0x0d or (sum(decrypted[:3]) & 0xff) != decrypted[3]:
-                print(self._hd(data), " => ", self._hd(decrypted), "Checksum error")
-            else:
-                op = decrypted[0]
-                val = decrypted[1] << 8 | decrypted[2]
-
-                values[op] = val
-
-                if 0x50 in values and 0x42 in values:
-                    return {'co2': values[0x50], 'temperature': (values[0x42]/16.0-273.15)}
+        return result
 
 
-if __name__ == "__main__":
 
-    Meter = CO2Meter()
-    print(Meter.get_data())
