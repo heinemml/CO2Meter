@@ -3,6 +3,10 @@ import fcntl
 import threading
 import weakref
 
+CO2Meter_CO2 = 0x50
+CO2Meter_TEMP = 0x42
+CO2Meter_HUM = 0x44
+
 def _co2_worker(weak_self):
     while True:
         self = weak_self()
@@ -94,8 +98,8 @@ class CO2Meter:
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
-        if 0x50 in self._values:
-            result = {'co2': self._values[0x50]}
+        if CO2Meter_CO2 in self._values:
+            result = {'co2': self._values[CO2Meter_CO2]}
 
         return result
 
@@ -104,8 +108,8 @@ class CO2Meter:
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
-        if 0x42 in self._values:
-            result = {'temperature': (self._values[0x42]/16.0-273.15)}
+        if CO2Meter_TEMP in self._values:
+            result = {'temperature': (self._values[CO2Meter_TEMP]/16.0-273.15)}
 
         return result
 
@@ -114,8 +118,8 @@ class CO2Meter:
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
-        if 0x44 in self._values:
-            result = {'humidity': (self._values[0x44]/100.0)}
+        if CO2Meter_HUM in self._values:
+            result = {'humidity': (self._values[CO2Meter_HUM]/100.0)}
         return result
 
 
