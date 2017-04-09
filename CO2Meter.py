@@ -3,9 +3,10 @@ import fcntl
 import threading
 import weakref
 
-CO2Meter_CO2 = 0x50
-CO2Meter_TEMP = 0x42
-CO2Meter_HUM = 0x44
+CO2METER_CO2 = 0x50
+CO2METER_TEMP = 0x42
+CO2METER_HUM = 0x44
+HIDIOCSFEATURE_9 = 0xC0094806
 
 def _co2_worker(weak_self):
     while True:
@@ -26,13 +27,13 @@ class CO2Meter:
     _values = {}
     _file = ""
     _running = True
+    _callback = None
 
     def __init__(self, device="/dev/hidraw0", callback=None):
         self._device = device
         self._callback = callback
         self._file = open(device, "a+b", 0)
 
-        HIDIOCSFEATURE_9 = 0xC0094806
         if sys.version_info >= (3,):
             set_report = [0] + self._key
             fcntl.ioctl(self._file, HIDIOCSFEATURE_9, bytearray(set_report))
@@ -40,7 +41,7 @@ class CO2Meter:
             set_report_str = "\x00" + "".join(chr(e) for e in self._key)
             fcntl.ioctl(self._file, HIDIOCSFEATURE_9, set_report_str)
 
-        thread = threading.Thread(target = _co2_worker, args=(weakref.ref(self),))
+        thread = threading.Thread(target=_co2_worker, args=(weakref.ref(self),))
         thread.daemon = True
         thread.start()
 
@@ -57,17 +58,17 @@ class CO2Meter:
             if decrypted[4] != 0x0d or (sum(decrypted[:3]) & 0xff) != decrypted[3]:
                 print(self._hd(data), " => ", self._hd(decrypted), "Checksum error")
             else:
-                op = decrypted[0]
+                operation = decrypted[0]
                 val = decrypted[1] << 8 | decrypted[2]
-                self._values[op] = val
+                self._values[operation] = val
                 if self._callback is not None:
-                    if op == CO2Meter_CO2:
-                        self._callback(sensor=op, value=val)
-                    elif op == CO2Meter_TEMP:
-                        self._callback(sensor=op,
+                    if operation == CO2METER_CO2:
+                        self._callback(sensor=operation, value=val)
+                    elif operation == CO2METER_TEMP:
+                        self._callback(sensor=operation,
                                        value=round(val / 16.0 - 273.1, 1))
-                    elif op == CO2Meter_HUM:
-                        self._callback(sensor=op, value=round(val / 100.0, 1))
+                    elif operation == CO2METER_HUM:
+                        self._callback(sensor=operation, value=round(val / 100.0, 1))
         except:
             self._running = False
 
@@ -77,8 +78,8 @@ class CO2Meter:
         shuffle = [2, 4, 0, 7, 1, 6, 5, 3]
 
         phase1 = [0] * 8
-        for i, o in enumerate(shuffle):
-            phase1[o] = data[i]
+        for i, j in enumerate(shuffle):
+            phase1[j] = data[i]
 
         phase2 = [0] * 8
         for i in range(8):
@@ -99,7 +100,8 @@ class CO2Meter:
         return out
 
 
-    def _hd(self, data):
+    @staticmethod
+    def _hd(data):
         return " ".join("%02X" % e for e in data)
 
 
@@ -107,8 +109,8 @@ class CO2Meter:
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
-        if CO2Meter_CO2 in self._values:
-            result = {'co2': self._values[CO2Meter_CO2]}
+        if CO2METER_CO2 in self._values:
+            result = {'co2': self._values[CO2METER_CO2]}
 
         return result
 
@@ -117,8 +119,8 @@ class CO2Meter:
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
-        if CO2Meter_TEMP in self._values:
-            result = {'temperature': (self._values[CO2Meter_TEMP]/16.0-273.15)}
+        if CO2METER_TEMP in self._values:
+            result = {'temperature': (self._values[CO2METER_TEMP]/16.0-273.15)}
 
         return result
 
@@ -127,8 +129,8 @@ class CO2Meter:
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
-        if CO2Meter_HUM in self._values:
-            result = {'humidity': (self._values[CO2Meter_HUM]/100.0)}
+        if CO2METER_HUM in self._values:
+            result = {'humidity': (self._values[CO2METER_HUM]/100.0)}
         return result
 
 
@@ -139,6 +141,3 @@ class CO2Meter:
         result.update(self.get_humidity())
 
         return result
-
-
-
