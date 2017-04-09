@@ -1,4 +1,4 @@
-# CO2Metser
+# CO2Meter
 Python Module to use co2meters like the 'AirCO2ntrol Mini' from TFA Dostmann with USB ID 04d9:a052. There are also other modules using the same interface.
 
 This module supports Python 2.7 and 3.x.
