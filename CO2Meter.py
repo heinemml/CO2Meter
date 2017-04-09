@@ -27,8 +27,9 @@ class CO2Meter:
     _file = ""
     _running = True
 
-    def __init__(self, device="/dev/hidraw0"):
+    def __init__(self, device="/dev/hidraw0", callback=None):
         self._device = device
+        self._callback = callback
         self._file = open(device, "a+b", 0)
 
         HIDIOCSFEATURE_9 = 0xC0094806
@@ -59,6 +60,14 @@ class CO2Meter:
                 op = decrypted[0]
                 val = decrypted[1] << 8 | decrypted[2]
                 self._values[op] = val
+                if self._callback is not None:
+                    if op == CO2Meter_CO2:
+                        self._callback(sensor=op, value=val)
+                    elif op == CO2Meter_TEMP:
+                        self._callback(sensor=op,
+                                       value=round(val / 16.0 - 273.1, 1))
+                    elif op == CO2Meter_HUM:
+                        self._callback(sensor=op, value=round(val / 100.0, 1))
         except:
             self._running = False
 
