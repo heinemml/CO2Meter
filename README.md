@@ -62,3 +62,14 @@ CO2METER_HUM = 0x44
 
 ### Error handling
 In Case the device can't be read anymore (e.g. it was unplugged) the worker thread will end in the background. Afterwards calls to any of the `get_*` functions will throw an `IOError`. You will need to handle any resetup, making sure that the device is there etc yourself.
+
+### Icon Credit
+
+Project icon made by
+<a href="https://www.flaticon.com/authors/vectors-market"
+   title="Vectors Market">Vectors Market</a> from
+<a href="https://www.flaticon.com/"
+   title="Flaticon">www.flaticon.com</a>
+is licensed by
+<a href="http://creativecommons.org/licenses/by/3.0/"
+   title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a>
