@@ -1,0 +1,32 @@
+{{ template "head" . }}
+
+{{ template "prom_content_head" . }}
+  <h1>Sensor Overview - {{ reReplaceAll "(.*?://)([^:/]+?)(:\\d+)?/.*" "$2" .Params.instance }}</h1>
+
+  <h3>CO2 Level</h3>
+  <div id="co2Graph"></div>
+  <script>
+  new PromConsole.Graph({
+    node: document.querySelector("#co2Graph"),
+    expr: "sensor_co2_level{job='sensor',instance='{{ .Params.instance }}'}",
+    renderer: 'area',
+    yTitle: 'CO2'
+  })
+  </script>
+
+  <h3>Temperature</h3>
+  <div id="tempGraph"></div>
+  <script>
+  new PromConsole.Graph({
+    node: document.querySelector("#tempGraph"),
+    expr: [
+      "sensor_temperature_level{job='sensor',instance='{{ .Params.instance }}'}",
+    ],
+    min: 0,
+    yTitle: 'Temperature'
+  })
+  </script>
+
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}

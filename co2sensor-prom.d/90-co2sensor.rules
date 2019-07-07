@@ -1,0 +1,5 @@
+# Put this in: /etc/udev/rules.d/90-co2sensor.rules
+# TODO: the remove step doesn't work?
+# TODO: The add step does multiple calls with different values of %k.
+ACTION=="remove", SUBSYSTEMS=="usb", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=="a052", RUN+="/usr/bin/systemctl stop co2sensor@%k.service"
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="04d9", ATTRS{idProduct}=="a052", GROUP="plugdev", MODE="0660", SYMLINK+="co2sensor%n", TAG+="systemd", ENV{SYSTEMD_WANTS}="co2sensor@%k.service"

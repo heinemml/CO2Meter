@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+"""Example program to get data from CO2 sensor."""
+import sys
+import http.server
+import CO2Meter
+
+class Sensor(http.server.BaseHTTPRequestHandler):
+  """Class to handle sensor requests."""
+
+  sensor_line = """# HELP sensor_%(m)s_level level for %(m)s.
+# TYPE sensor_%(m)s_level gauge
+sensor_%(m)s_level %(lvl)f
+"""
+
+  def __init__(self, meter, *args):
+    self.meter = meter
+    http.server.BaseHTTPRequestHandler.__init__(self, *args)
+
+  def do_GET(self):
+    """Handle get requests."""
+    self.send_response(200)
+    self.send_header('Content-Type',
+                     'text/plain; version=0.0.4; charset=utf-8')
+    self.end_headers()
+    try:
+      levels = self.meter.get_data()
+    except IOError as sensorerr:
+      print("Failed to read sensor (%s)." % sensorerr)
+      print("Exiting; assuming disconnect.")
+      sys.exit(0)
+    for measurement in ['co2', 'temperature']:
+      if measurement in levels:
+        self.wfile.write(
+            bytes(self.sensor_line % {'m': measurement,
+                                      'lvl': levels[measurement]}, 'UTF-8'))
+
+
+def main():
+  """Main program."""
+  print("Opening sensor %s." % sys.argv[1])
+  try:
+    meter = CO2Meter.CO2Meter("/dev/%s" % sys.argv[1])
+  except OSError as sensorerr:
+    print("Failed to open sensor (%s)." % sensorerr)
+    print("Exiting; assuming disconnect.")
+    sys.exit(0)
+  handler = lambda *args: Sensor(meter, *args)
+  server_address = ('', 8000)
+  httpd = http.server.HTTPServer(server_address, handler)
+  httpd.serve_forever()
+
+if __name__ == "__main__":
+  main()

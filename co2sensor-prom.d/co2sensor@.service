@@ -1,0 +1,9 @@
+# Put this in: /lib/systemd/system/co2sensor@.service
+
+[Unit]
+Description=CO2Sensor
+
+[Service]
+ExecStart=/usr/local/bin/co2sensor-prom %I
+KillMode=process
+Restart=on-failure
