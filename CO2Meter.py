@@ -1,3 +1,7 @@
+"""
+Module for reading out CO2Meter USB devices
+via a hidraw device under Linux
+"""
 import sys
 import fcntl
 import threading
@@ -10,6 +14,9 @@ HIDIOCSFEATURE_9 = 0xC0094806
 
 
 def _co2_worker(weak_self):
+    """
+    Worker thread that constantly reads from the usb device.
+    """
     while True:
         self = weak_self()
         if self is None:
@@ -46,6 +53,11 @@ class CO2Meter:
         thread.start()
 
     def _read_data(self):
+        """
+        Function that reads from the device, decodes it, validates the checksum
+        and adds the data to the dict _values.
+        Additionally calls the _callback if set
+        """
         try:
             result = self._file.read(8)
             if sys.version_info >= (3,):
@@ -67,6 +79,9 @@ class CO2Meter:
             self._running = False
 
     def _decrypt(self, data):
+        """
+        The received data has some weak crypto that needs to be decoded first
+        """
         cstate = [0x48, 0x74, 0x65, 0x6D, 0x70, 0x39, 0x39, 0x65]
         shuffle = [2, 4, 0, 7, 1, 6, 5, 3]
 
@@ -104,9 +119,14 @@ class CO2Meter:
 
     @staticmethod
     def _hd(data):
+        """ Helper function for printing the raw data """
         return " ".join("%02X" % e for e in data)
 
     def get_co2(self):
+        """
+        read the co2 value from _values
+        :returns dict with value or empty
+        """
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
@@ -116,6 +136,10 @@ class CO2Meter:
         return result
 
     def get_temperature(self):
+        """
+        reads the temperature from _values
+        :returns dict with value or empty
+        """
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
@@ -125,6 +149,12 @@ class CO2Meter:
         return result
 
     def get_humidity(self):  # not implemented by all devices
+        """
+        reads the humidty from _values.
+        not all devices support this but might still return a value 0.
+        So values of 0 are discarded.
+        :returns dict with value or empty
+        """
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
@@ -133,6 +163,10 @@ class CO2Meter:
         return result
 
     def get_data(self):
+        """
+        get all currently available values
+        :returns dict with value or empty
+        """
         result = {}
         result.update(self.get_co2())
         result.update(self.get_temperature())
