@@ -56,7 +56,7 @@ You can pass a callback to the constructor. It will be called when any of the va
 ```python
 CO2METER_CO2 = 0x50
 CO2METER_TEMP = 0x42
-CO2METER_HUM = 0x44
+CO2METER_HUM = 0x41
 ```
 
 
