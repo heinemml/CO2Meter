@@ -59,15 +59,10 @@ class CO2Meter:
             else:
                 operation = decrypted[0]
                 val = decrypted[1] << 8 | decrypted[2]
-                self._values[operation] = val
+                self._values[operation] = self._convert_value(operation, val)
                 if self._callback is not None:
-                    if operation == CO2METER_CO2:
+                    if operation in {CO2METER_CO2, CO2METER_TEMP, CO2METER_HUM}:
                         self._callback(sensor=operation, value=val)
-                    elif operation == CO2METER_TEMP:
-                        self._callback(sensor=operation,
-                                       value=round(val / 16.0 - 273.1, 1))
-                    elif operation == CO2METER_HUM:
-                        self._callback(sensor=operation, value=round(val / 100.0, 1))
         except:
             self._running = False
 
@@ -98,6 +93,16 @@ class CO2Meter:
         return out
 
     @staticmethod
+    def _convert_value(sensor, value):
+        """ Apply Conversion of value dending on sensor type """
+        if sensor == CO2METER_TEMP:
+            return round(value / 16.0 - 273.1, 1)
+        if sensor == CO2METER_HUM:
+            return round(value / 100.0, 1)
+
+        return value
+
+    @staticmethod
     def _hd(data):
         return " ".join("%02X" % e for e in data)
 
@@ -115,7 +120,7 @@ class CO2Meter:
             raise IOError("worker thread couldn't read data")
         result = {}
         if CO2METER_TEMP in self._values:
-            result = {'temperature': (self._values[CO2METER_TEMP] / 16.0 - 273.15)}
+            result = {'temperature': self._values[CO2METER_TEMP]}
 
         return result
 
@@ -123,8 +128,8 @@ class CO2Meter:
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
-        if CO2METER_HUM in self._values:
-            result = {'humidity': (self._values[CO2METER_HUM] / 100.0)}
+        if CO2METER_HUM in self._values and self._values[CO2METER_HUM] != 0:
+            result = {'humidity': self._values[CO2METER_HUM]}
         return result
 
     def get_data(self):
