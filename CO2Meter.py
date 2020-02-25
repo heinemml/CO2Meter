@@ -73,7 +73,7 @@ class CO2Meter:
                 val = decrypted[1] << 8 | decrypted[2]
                 self._values[operation] = self._convert_value(operation, val)
                 if self._callback is not None:
-                    if operation in {CO2METER_CO2, CO2METER_TEMP, CO2METER_HUM}:
+                    if operation in {CO2METER_CO2, CO2METER_TEMP} or (operation == CO2METER_HUM and val != 0):
                         self._callback(sensor=operation, value=val)
         except:
             self._running = False
