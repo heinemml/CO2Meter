@@ -1,7 +1,8 @@
 #!/bin/env python
-from CO2Meter import *
-from datetime import datetime
 import time
+from datetime import datetime
+
+from CO2Meter import *
 
 Meter = CO2Meter("/dev/hidraw0")
 while True:

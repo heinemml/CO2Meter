@@ -8,6 +8,7 @@ CO2METER_TEMP = 0x42
 CO2METER_HUM = 0x44
 HIDIOCSFEATURE_9 = 0xC0094806
 
+
 def _co2_worker(weak_self):
     while True:
         self = weak_self()
@@ -21,7 +22,6 @@ def _co2_worker(weak_self):
 
 
 class CO2Meter:
-
     _key = [0xc4, 0xc6, 0xc0, 0x92, 0x40, 0x23, 0xdc, 0x96]
     _device = ""
     _values = {}
@@ -44,7 +44,6 @@ class CO2Meter:
         thread = threading.Thread(target=_co2_worker, args=(weakref.ref(self),))
         thread.daemon = True
         thread.start()
-
 
     def _read_data(self):
         try:
@@ -72,7 +71,6 @@ class CO2Meter:
         except:
             self._running = False
 
-
     def _decrypt(self, data):
         cstate = [0x48, 0x74, 0x65, 0x6D, 0x70, 0x39, 0x39, 0x65]
         shuffle = [2, 4, 0, 7, 1, 6, 5, 3]
@@ -87,11 +85,11 @@ class CO2Meter:
 
         phase3 = [0] * 8
         for i in range(8):
-            phase3[i] = ((phase2[i] >> 3) | (phase2[(i-1+8)%8] << 5)) & 0xff
+            phase3[i] = ((phase2[i] >> 3) | (phase2[(i - 1 + 8) % 8] << 5)) & 0xff
 
         ctmp = [0] * 8
         for i in range(8):
-            ctmp[i] = ((cstate[i] >> 4) | (cstate[i]<<4)) & 0xff
+            ctmp[i] = ((cstate[i] >> 4) | (cstate[i] << 4)) & 0xff
 
         out = [0] * 8
         for i in range(8):
@@ -99,11 +97,9 @@ class CO2Meter:
 
         return out
 
-
     @staticmethod
     def _hd(data):
         return " ".join("%02X" % e for e in data)
-
 
     def get_co2(self):
         if not self._running:
@@ -114,25 +110,22 @@ class CO2Meter:
 
         return result
 
-
     def get_temperature(self):
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
         if CO2METER_TEMP in self._values:
-            result = {'temperature': (self._values[CO2METER_TEMP]/16.0-273.15)}
+            result = {'temperature': (self._values[CO2METER_TEMP] / 16.0 - 273.15)}
 
         return result
 
-
-    def get_humidity(self): # not implemented by all devices
+    def get_humidity(self):  # not implemented by all devices
         if not self._running:
             raise IOError("worker thread couldn't read data")
         result = {}
         if CO2METER_HUM in self._values:
-            result = {'humidity': (self._values[CO2METER_HUM]/100.0)}
+            result = {'humidity': (self._values[CO2METER_HUM] / 100.0)}
         return result
-
 
     def get_data(self):
         result = {}
