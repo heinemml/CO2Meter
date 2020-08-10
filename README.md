@@ -47,7 +47,7 @@ while True:
     sensor.get_data()
 ```
 
-The device writes out one value at a time. So we need to parse some data until we have co2 and temperature. Thus the get_data() method will initially return none or only on value (whichever comes first). 
+The device writes out one value at a time. So we need to parse some data until we have co2 and temperature. Thus the get_data() method will initially return none or only one value (whichever comes first). 
 When you just need one measurement you should wait some seconds or iterate until you get a full reading. If you just need co2 a call to `get_co2` might speed things up.
 
 ### Callback
