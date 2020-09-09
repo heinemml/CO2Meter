@@ -65,16 +65,20 @@ class CO2Meter:
             else:
                 data = list(ord(e) for e in result)
 
-            decrypted = self._decrypt(data)
-            if decrypted[4] != 0x0d or (sum(decrypted[:3]) & 0xff) != decrypted[3]:
-                print(self._hd(data), " => ", self._hd(decrypted), "Checksum error")
-            else:
-                operation = decrypted[0]
-                val = decrypted[1] << 8 | decrypted[2]
-                self._values[operation] = self._convert_value(operation, val)
-                if self._callback is not None:
-                    if operation in {CO2METER_CO2, CO2METER_TEMP} or (operation == CO2METER_HUM and val != 0):
-                        self._callback(sensor=operation, value=val)
+            if data[4] != 0x0d:
+                """ newer devices don't encrypt the data, if byte 4!=0x0d assume encrypted data """
+                data = self._decrypt(data)
+                
+            if data[4] != 0x0d or (sum(data[:3]) & 0xff) != data[3]:
+                print(self._hd(data), "Checksum error")
+                return
+            
+            operation = data[0]
+            val = data[1] << 8 | data[2]
+            self._values[operation] = self._convert_value(operation, val)
+            if self._callback is not None:
+                if operation in {CO2METER_CO2, CO2METER_TEMP} or (operation == CO2METER_HUM and val != 0):
+                    self._callback(sensor=operation, value=val)
         except:
             self._running = False
 
